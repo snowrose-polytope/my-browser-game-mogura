@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#176b55">
+	<title>もぐらラッシュ！</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--forest: #176b55;
+			--forest-dark: #104b40;
+			--leaf: #56a873;
+			--coral: #f06c52;
+			--sun: #f7c84b;
+			--sky: #a9dfe0;
+			--paper: #fffdf4;
+			--ink: #203d34;
+			--muted: #648075;
+			--soil: #86543d;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			color: var(--ink);
+			background-color: #e8f3dc;
+			background-image:
+				radial-gradient(ellipse at 10% 12%, rgba(255, 255, 255, .8) 0 2px, transparent 3px),
+				radial-gradient(ellipse at 84% 22%, rgba(86, 168, 115, .16) 0 3px, transparent 4px),
+				repeating-linear-gradient(128deg, transparent 0 35px, rgba(86, 168, 115, .07) 36px 38px, transparent 39px 72px);
+			font-family: "Trebuchet MS", "Yu Gothic UI", "Meiryo", sans-serif;
+		}
+
+		button { font: inherit; }
+
+		.page {
+			width: min(1120px, 100%);
+			min-height: 100vh;
+			margin: 0 auto;
+			padding: 20px 30px 28px;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			padding-bottom: 18px;
+			border-bottom: 1px solid rgba(23, 107, 85, .18);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			color: var(--forest-dark);
+			font-size: 15px;
+			font-weight: 900;
+			letter-spacing: .04em;
+		}
+
+		.brand-mark {
+			display: grid;
+			width: 36px;
+			height: 36px;
+			place-items: center;
+			border: 2px solid var(--forest);
+			border-radius: 50%;
+			background: var(--sun);
+			font-size: 20px;
+			transform: rotate(-8deg);
+		}
+
+		.top-note {
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 700;
+		}
+
+		main { flex: 1; }
+
+		.intro {
+			display: flex;
+			align-items: end;
+			justify-content: space-between;
+			gap: 20px;
+			padding: 22px 0 18px;
+		}
+
+		h1 {
+			margin: 0;
+			color: var(--forest-dark);
+			font-family: Georgia, "Yu Mincho", "YuMincho", serif;
+			font-size: clamp(30px, 5vw, 48px);
+			line-height: 1;
+		}
+
+		h1 span { color: var(--coral); }
+
+		.round-label {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 8px 12px;
+			border: 1px solid rgba(23, 107, 85, .22);
+			border-radius: 999px;
+			color: var(--forest);
+			background: rgba(255, 253, 244, .72);
+			font-size: 12px;
+			font-weight: 800;
+			white-space: nowrap;
+		}
+
+		.round-label::before {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--coral);
+			content: "";
+		}
+
+		.game-layout {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) 260px;
+			gap: 22px;
+			align-items: stretch;
+		}
+
+		.play-area {
+			min-width: 0;
+			padding: 20px;
+			border: 2px solid var(--forest-dark);
+			border-radius: 8px;
+			background: var(--forest);
+			box-shadow: 0 7px 0 rgba(16, 75, 64, .18);
+		}
+
+		.play-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 14px;
+			color: white;
+			font-size: 12px;
+			font-weight: 800;
+		}
+
+		.live-state {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			color: #d3eee0;
+		}
+
+		.live-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--sun);
+			box-shadow: 0 0 0 3px rgba(247, 200, 75, .2);
+		}
+
+		.board {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: clamp(8px, 2vw, 18px);
+			padding: clamp(8px, 2vw, 16px);
+			border: 2px solid rgba(255, 255, 255, .24);
+			border-radius: 6px;
+			background: #79b96f;
+			background-image: repeating-linear-gradient(15deg, transparent 0 25px, rgba(255,255,255,.07) 26px 28px, transparent 29px 48px);
+		}
+
+		.hole {
+			position: relative;
+			display: grid;
+			aspect-ratio: 1.16 / 1;
+			min-width: 0;
+			padding: 0;
+			place-items: end center;
+			overflow: hidden;
+			border: 0;
+			border-radius: 8px;
+			background: transparent;
+			cursor: pointer;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.hole:focus-visible { outline: 3px solid white; outline-offset: -3px; }
+
+		.hole::before {
+			position: absolute;
+			right: 3%;
+			bottom: 3%;
+			left: 3%;
+			height: 40%;
+			border: 3px solid #633d32;
+			border-radius: 50%;
+			background: #4a342f;
+			box-shadow: inset 0 8px 0 rgba(255,255,255,.1), 0 4px 0 rgba(16,75,64,.18);
+			content: "";
+		}
+
+		.mole {
+			position: absolute;
+			z-index: 1;
+			bottom: 13%;
+			width: 76%;
+			height: 82%;
+			opacity: 0;
+			transform: translateY(64%);
+			transition: transform 140ms cubic-bezier(.2,.8,.2,1), opacity 120ms ease;
+			pointer-events: none;
+		}
+
+		.mole svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+		.hole.is-active .mole {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		.hole.is-active { cursor: pointer; }
+
+		.hole.is-active::after {
+			position: absolute;
+			z-index: 2;
+			right: 9%;
+			bottom: 20%;
+			left: 9%;
+			height: 18%;
+			border-radius: 50%;
+			background: #4a342f;
+			content: "";
+		}
+
+		.hole.is-active .mole { z-index: 3; }
+
+		.hole.is-hit .mole { transform: translateY(-12%) scale(1.13) rotate(-8deg); }
+
+		.spark {
+			position: absolute;
+			z-index: 4;
+			top: 5%;
+			right: 8%;
+			color: var(--sun);
+			font-size: clamp(18px, 3vw, 27px);
+			opacity: 0;
+			transform: scale(.2) rotate(-20deg);
+			pointer-events: none;
+		}
+
+		.hole.is-hit .spark { animation: pop 330ms ease-out forwards; }
+
+		@keyframes pop {
+			20% { opacity: 1; transform: scale(1.1) rotate(10deg); }
+			100% { opacity: 0; transform: scale(.8) translateY(-12px) rotate(15deg); }
+		}
+
+		.action-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding-top: 16px;
+		}
+
+		.message {
+			min-height: 20px;
+			color: #e1f1dc;
+			font-size: 13px;
+			font-weight: 700;
+		}
+
+		.start-button {
+			min-width: 142px;
+			min-height: 46px;
+			padding: 10px 20px;
+			border: 2px solid #c24d37;
+			border-radius: 5px;
+			color: #402d22;
+			background: var(--sun);
+			box-shadow: 0 4px 0 #c24d37;
+			font-size: 16px;
+			font-weight: 900;
+			cursor: pointer;
+			transition: transform 100ms ease, box-shadow 100ms ease, background 150ms ease;
+		}
+
+		.start-button:hover { background: #ffda69; }
+		.start-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #c24d37; }
+		.start-button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+
+		.score-panel {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.score-block {
+			padding: 17px 18px;
+			border: 1px solid rgba(23, 107, 85, .2);
+			border-radius: 6px;
+			background: var(--paper);
+		}
+
+		.score-block.primary { flex: 1; background: #fff5d5; }
+
+		.stat-label {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			color: var(--muted);
+			font-size: 11px;
+			font-weight: 900;
+			letter-spacing: .08em;
+		}
+
+		.stat-label .icon { font-size: 16px; }
+
+		.stat-value {
+			margin-top: 5px;
+			color: var(--forest-dark);
+			font-size: 38px;
+			font-weight: 900;
+			font-variant-numeric: tabular-nums;
+			line-height: 1;
+		}
+
+		.stat-value small { margin-left: 4px; font-size: 13px; }
+		.primary .stat-value { color: #b94c36; font-size: 48px; }
+
+		.timer-track {
+			height: 7px;
+			margin-top: 14px;
+			overflow: hidden;
+			border-radius: 99px;
+			background: #efdca5;
+		}
+
+		.timer-fill {
+			width: 100%;
+			height: 100%;
+			border-radius: inherit;
+			background: var(--coral);
+			transform: scaleX(1);
+			transform-origin: left center;
+			transition: transform 100ms linear, background 300ms ease;
+		}
+
+		.timer-fill.is-low { background: #bd3f37; }
+
+		.footer {
+			display: flex;
+			justify-content: space-between;
+			gap: 14px;
+			padding-top: 17px;
+			color: #688477;
+			font-size: 11px;
+			font-weight: 700;
+		}
+
+		.footer span:last-child { color: var(--forest); }
+
+		@media (max-width: 720px) {
+			.page { padding: 14px 16px 18px; }
+			.topbar { padding-bottom: 13px; }
+			.intro { padding: 18px 0 14px; }
+			.game-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+			.play-area { padding: 13px; }
+			.score-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+			.score-block { padding: 12px 14px; }
+			.score-block.primary { grid-column: span 2; }
+			.stat-value, .primary .stat-value { font-size: 32px; }
+			.timer-track { margin-top: 9px; }
+			.footer { padding-top: 13px; }
+		}
+
+		@media (max-width: 390px) {
+			.page { padding-right: 11px; padding-left: 11px; }
+			.top-note { font-size: 10px; }
+			.play-area { padding: 10px; }
+			.action-row { align-items: stretch; }
+			.message { align-self: center; font-size: 11px; }
+			.start-button { min-width: 118px; padding-right: 13px; padding-left: 13px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+		}
+	</style>
+</head>
+<body>
+	<div class="page">
+		<header class="topbar">
+			<div class="brand"><span class="brand-mark" aria-hidden="true">🌱</span><span>ひだまりファーム</span></div>
+			<div class="top-note">今日も畑は大さわぎ！</div>
+		</header>
+
+		<main>
+			<section class="intro" aria-labelledby="game-title">
+				<h1 id="game-title">もぐら<span>ラッシュ！</span></h1>
+				<div class="round-label">30秒チャレンジ</div>
+			</section>
+
+			<section class="game-layout" aria-label="モグラたたきゲーム">
+				<div class="play-area">
+					<div class="play-head">
+						<span>畑の見まわり</span>
+						<span class="live-state"><span class="live-dot" aria-hidden="true"></span><span id="game-state">準備中</span></span>
+					</div>
+					<div class="board" id="board" aria-label="ゲーム盤面"></div>
+					<div class="action-row">
+						<div class="message" id="message" aria-live="polite">モグラを見つけたらタッチ！</div>
+						<button class="start-button" id="start-button" type="button">スタート！</button>
+					</div>
+				</div>
+
+				<aside class="score-panel" aria-label="スコア">
+					<div class="score-block primary">
+						<div class="stat-label"><span>のこり時間</span><span class="icon" aria-hidden="true">⏱</span></div>
+						<div class="stat-value"><span id="time">30</span><small>秒</small></div>
+						<div class="timer-track" aria-hidden="true"><div class="timer-fill" id="timer-fill"></div></div>
+					</div>
+					<div class="score-block">
+						<div class="stat-label"><span>スコア</span><span class="icon" aria-hidden="true">✦</span></div>
+						<div class="stat-value" id="score">0</div>
+					</div>
+					<div class="score-block">
+						<div class="stat-label"><span>ベスト</span><span class="icon" aria-hidden="true">🏆</span></div>
+						<div class="stat-value" id="best">0</div>
+					</div>
+				</aside>
+			</section>
+		</main>
+
+		<footer class="footer"><span>ひだまりファームのお仕事</span><span>モグラに負けるな！</span></footer>
+	</div>
+
+	<script>
+		const board = document.querySelector("#board");
+		const startButton = document.querySelector("#start-button");
+		const timeDisplay = document.querySelector("#time");
+		const scoreDisplay = document.querySelector("#score");
+		const bestDisplay = document.querySelector("#best");
+		const timerFill = document.querySelector("#timer-fill");
+		const message = document.querySelector("#message");
+		const gameState = document.querySelector("#game-state");
+		const roundLength = 30_000;
+		const moleLifetime = 850;
+		let score = 0;
+		let best = Number(localStorage.getItem("mogura-rush-best") || 0);
+		let activeHole = -1;
+		let gameStartedAt = 0;
+		let lastHole = -1;
+		let streak = 0;
+		let running = false;
+		let spawnTimer;
+		let gameTimer;
+		let hideTimer;
+
+		const moleArt = `
+			<svg viewBox="0 0 120 120" role="img" aria-label="モグラ">
+				<ellipse cx="60" cy="79" rx="43" ry="45" fill="#8b6653"/>
+				<ellipse cx="33" cy="55" rx="15" ry="17" fill="#8b6653"/>
+				<ellipse cx="34" cy="57" rx="8" ry="10" fill="#e9b9a2"/>
+				<ellipse cx="87" cy="55" rx="15" ry="17" fill="#8b6653"/>
+				<ellipse cx="86" cy="57" rx="8" ry="10" fill="#e9b9a2"/>
+				<ellipse cx="60" cy="73" rx="37" ry="34" fill="#bd9273"/>
+				<ellipse cx="47" cy="68" rx="4" ry="5" fill="#263a32"/>
+				<ellipse cx="73" cy="68" rx="4" ry="5" fill="#263a32"/>
+				<ellipse cx="60" cy="82" rx="16" ry="12" fill="#e9c2a8"/>
+				<ellipse cx="60" cy="78" rx="6" ry="4.5" fill="#e57e75"/>
+				<path d="M54 88q6 6 12 0" fill="none" stroke="#70483d" stroke-width="2.5" stroke-linecap="round"/>
+				<path d="M31 91q-12 8-8 17M89 91q12 8 8 17" fill="none" stroke="#8b6653" stroke-width="8" stroke-linecap="round"/>
+				<path d="M47 48q13-8 26 0" fill="none" stroke="#d5ab8e" stroke-width="3" stroke-linecap="round"/>
+			</svg>`;
+
+		const holes = Array.from({ length: 9 }, (_, index) => {
+			const hole = document.createElement("button");
+			hole.className = "hole";
+			hole.type = "button";
+			hole.setAttribute("aria-label", `${index + 1}番の穴`);
+			hole.innerHTML = `<span class="mole">${moleArt}</span><span class="spark" aria-hidden="true">✦</span>`;
+			hole.addEventListener("click", () => hitMole(index));
+			board.append(hole);
+			return hole;
+		});
+
+		bestDisplay.textContent = best.toLocaleString("ja-JP");
+
+		function clearMole() {
+			holes.forEach((hole) => hole.classList.remove("is-active", "is-hit"));
+			activeHole = -1;
+			clearTimeout(hideTimer);
+		}
+
+		function showMole() {
+			if (!running) return;
+			clearMole();
+			let nextHole = Math.floor(Math.random() * holes.length);
+			if (holes.length > 1 && nextHole === lastHole) nextHole = (nextHole + 1 + Math.floor(Math.random() * (holes.length - 1))) % holes.length;
+			activeHole = nextHole;
+			lastHole = nextHole;
+			holes[nextHole].classList.add("is-active");
+			hideTimer = setTimeout(() => {
+				clearMole();
+				if (running) spawnTimer = setTimeout(showMole, 130);
+			}, moleLifetime);
+		}
+
+		function hitMole(index) {
+			if (!running) return;
+			if (index !== activeHole) {
+				streak = 0;
+				return;
+			}
+			holes[index].classList.add("is-hit");
+			activeHole = -1;
+			clearTimeout(hideTimer);
+			streak += 1;
+			score += 100 + Math.min(streak - 1, 5) * 20;
+			scoreDisplay.textContent = score.toLocaleString("ja-JP");
+			message.textContent = streak > 1 ? `${streak}連続！いい調子！` : "ナイス！その調子！";
+			if (score > best) {
+				best = score;
+				bestDisplay.textContent = best.toLocaleString("ja-JP");
+				localStorage.setItem("mogura-rush-best", String(best));
+			}
+			spawnTimer = setTimeout(() => {
+				clearMole();
+				showMole();
+			}, 180);
+		}
+
+		function finishGame() {
+			running = false;
+			clearTimeout(spawnTimer);
+			clearTimeout(hideTimer);
+			clearInterval(gameTimer);
+			clearMole();
+			timeDisplay.textContent = "0";
+			timerFill.style.transform = "scaleX(0)";
+			gameState.textContent = "終了";
+			startButton.textContent = "もう一度！";
+			message.textContent = `おつかれさま！ ${score.toLocaleString("ja-JP")} 点！`;
+		}
+
+		function startGame() {
+			clearTimeout(spawnTimer);
+			clearTimeout(hideTimer);
+			clearInterval(gameTimer);
+			clearMole();
+			score = 0;
+			streak = 0;
+			running = true;
+			gameStartedAt = Date.now();
+			scoreDisplay.textContent = "0";
+			timeDisplay.textContent = "30";
+			timerFill.classList.remove("is-low");
+			timerFill.style.transform = "scaleX(1)";
+			gameState.textContent = "プレイ中";
+			startButton.textContent = "やりなおす";
+			message.textContent = "モグラをつかまえよう！";
+			showMole();
+			gameTimer = setInterval(() => {
+				const remaining = Math.max(0, roundLength - (Date.now() - gameStartedAt));
+				timeDisplay.textContent = String(Math.ceil(remaining / 1000));
+				timerFill.style.transform = `scaleX(${remaining / roundLength})`;
+				timerFill.classList.toggle("is-low", remaining <= 10_000);
+				if (remaining <= 0) finishGame();
+			}, 50);
+		}
+
+		document.addEventListener("keydown", (event) => {
+			if (!running || event.altKey || event.ctrlKey || event.metaKey) return;
+			const index = Number(event.key) - 1;
+			if (index >= 0 && index < holes.length) hitMole(index);
+		});
+
+		startButton.addEventListener("click", startGame);
+	</script>
+</body>
+</html>
